@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\SchoolClassController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -13,7 +14,6 @@ Route::get('/', function () {
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'store']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -30,5 +30,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/classes', [SchoolClassController::class, 'index'])->name('classes.index');
     Route::post('/classes', [SchoolClassController::class, 'store'])->name('classes.store');
     
-    Route::get('/students', [DashboardController::class, 'index'])->name('students.index');
+    // Students
+    Route::get('/students', [StudentController::class, 'index'])->name('students.index');
+    Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+    Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 });

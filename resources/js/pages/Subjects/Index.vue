@@ -159,7 +159,7 @@ const deleteSubject = (id: number) => {
     <div v-if="isModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeModal"></div>
       
-      <div class="relative bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden scale-in">
+      <div class="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden scale-in">
         <div class="p-8">
           <div class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-4">
@@ -167,51 +167,51 @@ const deleteSubject = (id: number) => {
                 <Plus :size="24" />
               </div>
               <div>
-                <h3 class="text-xl font-black text-slate-900">Nova Disciplina</h3>
-                <p class="text-sm font-medium text-slate-500">Adicione uma matéria à grade.</p>
+                <h3 class="text-xl font-black text-slate-900 leading-tight">Nova Disciplina</h3>
+                <p class="text-sm font-medium text-slate-500">Adicione à grade.</p>
               </div>
             </div>
             <button @click="closeModal" class="p-2 text-slate-400 hover:text-slate-900 transition-colors">
-              <X :size="24" />
+              <X :size="20" />
             </button>
           </div>
 
           <form @submit.prevent="submit" class="space-y-6">
             <div class="space-y-2 group">
-              <label class="text-xs font-black uppercase tracking-widest text-slate-400 group-focus-within:text-indigo-600 transition-colors">Nome da Disciplina</label>
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-focus-within:text-indigo-600 transition-colors ml-1">Nome da Disciplina</label>
               <div class="relative">
                 <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                  <BookOpen :size="20" />
+                  <BookOpen :size="18" />
                 </div>
                 <input 
                   v-model="form.name"
                   type="text" 
                   required
-                  placeholder="Ex: Física Quântica, Artes, Ética..."
-                  class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pl-12 pr-4 text-sm font-semibold text-slate-900 outline-none focus:border-indigo-600/10 focus:ring-4 focus:ring-indigo-600/5 transition-all"
+                  placeholder="Ex: Matemática, Física..."
+                  class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-600/20 focus:bg-white focus:ring-4 focus:ring-indigo-600/5 transition-all"
                   autofocus
                 >
               </div>
-              <p v-if="form.errors.name" class="text-xs text-rose-500 font-bold flex items-center gap-1 mt-1">
+              <p v-if="form.errors.name" class="text-[11px] text-rose-500 font-bold flex items-center gap-1 mt-1 ml-1">
                 <AlertCircle :size="12" /> {{ form.errors.name }}
               </p>
             </div>
 
-            <div class="pt-4 flex gap-3">
+            <div class="pt-2 flex items-center gap-3">
               <button 
                 type="button"
                 @click="closeModal"
-                class="flex-1 px-6 py-4 rounded-2xl font-black text-slate-500 hover:bg-slate-50 transition-all active:scale-95"
+                class="flex-1 px-6 py-4 rounded-2xl font-black text-slate-500 hover:bg-slate-50 transition-all active:scale-95 text-sm"
               >
                 Cancelar
               </button>
               <button 
                 type="submit"
                 :disabled="form.processing"
-                class="flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-2xl font-black shadow-xl shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                class="flex-[1.5] bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-6 py-4 rounded-2xl font-black shadow-xl shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
               >
-                <Plus v-if="!form.processing" :size="20" />
-                <span>{{ form.processing ? 'Registrando...' : 'Criar Disciplina' }}</span>
+                <Plus v-if="!form.processing" :size="18" />
+                <span>{{ form.processing ? 'Criando...' : 'Criar Disciplina' }}</span>
               </button>
             </div>
           </form>
