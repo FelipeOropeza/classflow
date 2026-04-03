@@ -12,7 +12,9 @@ import {
   Menu,
   X,
   Bell,
-  Search
+  Search,
+  Layers,
+  ShieldCheck
 } from 'lucide-vue-next';
 
 interface MenuItem {
@@ -52,8 +54,10 @@ const menuItems: MenuItem[] = [
   { name: 'Dashboard', icon: LayoutDashboard, route: 'dashboard', component: 'Dashboard' },
   { name: 'Ano Letivo', icon: Calendar, route: 'academic-years.index', component: 'AcademicYears/Index' },
   { name: 'Disciplinas', icon: BookOpen, route: 'subjects.index', component: 'Subjects/Index' },
-  { name: 'Turmas', icon: Users, route: 'classes.index', component: 'Classes/Index' },
+  { name: 'Turmas', icon: Layers, route: 'classes.index', component: 'Classes/Index' },
+  { name: 'Professores', icon: Users, route: 'teachers.index', component: 'Teachers/Index' },
   { name: 'Alunos', icon: GraduationCap, route: 'students.index', component: 'Students/Index' },
+  { name: 'Vínculos', icon: ShieldCheck, route: 'academic-links.index', component: 'Teachers/AcademicLinks' },
 ];
 </script>
 
