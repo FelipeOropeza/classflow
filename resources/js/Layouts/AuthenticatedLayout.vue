@@ -3,18 +3,23 @@ import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { 
   LayoutDashboard, 
+  Calendar, 
+  BookOpen, 
+  Layers, 
   Users, 
   GraduationCap, 
-  BookOpen, 
-  Calendar,
-  LogOut,
-  ChevronRight,
+  ClipboardCheck, 
+  ClipboardList,
+  ShieldCheck,
+  Baby,
+  BarChart3,
+  CalendarDays,
   Menu,
   X,
-  Bell,
+  LogOut,
+  ChevronRight,
   Search,
-  Layers,
-  ShieldCheck
+  Bell
 } from 'lucide-vue-next';
 
 interface MenuItem {
@@ -22,6 +27,7 @@ interface MenuItem {
   icon: any;
   route: string;
   component: string;
+  roles: string[];
 }
 
 import { Auth } from '@/types/auth';
@@ -38,27 +44,41 @@ const page = usePage<AuthenticatedPageProps>();
 
 const toggleSidebar = () => isSidebarOpen.value = !isSidebarOpen.value;
 
-const roleNames: Record<string, string> = {
-  director: 'Diretor(a)',
+const userRoleNames: Record<string, string> = {
+  admin: 'Diretoria',
+  director: 'Diretoria',
   teacher: 'Professor(a)',
   guardian: 'Responsável',
-  admin: 'Administrador',
 };
 
-const userRole = computed(() => {
+const userRoleDisplayName = computed(() => {
   const role = (page.props.auth as any)?.user?.role || 'user';
-  return roleNames[role as string] || 'Usuário';
+  return userRoleNames[role as string] || 'Usuário';
 });
 
+const userRoleSlug = computed(() => (page.props.auth as any)?.user?.role || 'user');
+
 const menuItems: MenuItem[] = [
-  { name: 'Dashboard', icon: LayoutDashboard, route: 'dashboard', component: 'Dashboard' },
-  { name: 'Ano Letivo', icon: Calendar, route: 'academic-years.index', component: 'AcademicYears/Index' },
-  { name: 'Disciplinas', icon: BookOpen, route: 'subjects.index', component: 'Subjects/Index' },
-  { name: 'Turmas', icon: Layers, route: 'classes.index', component: 'Classes/Index' },
-  { name: 'Professores', icon: Users, route: 'teachers.index', component: 'Teachers/Index' },
-  { name: 'Alunos', icon: GraduationCap, route: 'students.index', component: 'Students/Index' },
-  { name: 'Vínculos', icon: ShieldCheck, route: 'academic-links.index', component: 'Teachers/AcademicLinks' },
+  { name: 'Dashboard', icon: LayoutDashboard, route: 'dashboard', component: 'Dashboard', roles: ['admin', 'director', 'teacher', 'guardian'] },
+  // Diretoria
+  { name: 'Agenda Escolar', icon: CalendarDays, route: 'school-events.index', component: 'Events/Index', roles: ['admin', 'director'] },
+  { name: 'Períodos Escolares', icon: CalendarDays, route: 'terms.index', component: 'AcademicYears/Terms', roles: ['admin', 'director'] },
+  { name: 'Disciplinas', icon: BookOpen, route: 'subjects.index', component: 'Subjects/Index', roles: ['admin', 'director'] },
+  { name: 'Turmas', icon: Layers, route: 'classes.index', component: 'Classes/Index', roles: ['admin', 'director'] },
+  { name: 'Professores', icon: Users, route: 'teachers.index', component: 'Teachers/Index', roles: ['admin', 'director'] },
+  { name: 'Alunos', icon: GraduationCap, route: 'students.index', component: 'Students/Index', roles: ['admin', 'director'] },
+  { name: 'Vínculos', icon: ShieldCheck, route: 'academic-links.index', component: 'Teachers/AcademicLinks', roles: ['admin', 'director'] },
+  // Professor
+  { name: 'Frequência', icon: ClipboardCheck, route: 'attendance.index', component: 'Attendance/Index', roles: ['teacher'] },
+  { name: 'Planejar Avaliações', icon: ClipboardList, route: 'assessments.index', component: 'Assessments/Index', roles: ['teacher'] },
+  { name: 'Lançar Notas', icon: BarChart3, route: 'grades.index', component: 'Grades/Index', roles: ['teacher'] },
+  // Responsável
+  { name: 'Boletim do Filho', icon: Baby, route: 'guardian.report-card', component: 'Guardian/ReportCard', roles: ['guardian'] },
 ];
+
+const filteredMenu = computed(() => {
+  return menuItems.filter(item => item.roles.includes(userRoleSlug.value));
+});
 </script>
 
 <template>
@@ -85,7 +105,7 @@ const menuItems: MenuItem[] = [
 
       <nav class="flex-1 px-4 space-y-1.5 mt-4 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <Link 
-          v-for="item in menuItems" 
+          v-for="item in filteredMenu" 
           :key="item.name"
           :href="route(item.route)" 
           :class="[
@@ -108,7 +128,7 @@ const menuItems: MenuItem[] = [
             </div>
             <div v-if="isSidebarOpen" class="ml-3 overflow-hidden">
                 <p class="text-sm font-semibold text-slate-900 truncate">{{ page.props.auth?.user?.name || 'Convidado' }}</p>
-                <p class="text-xs text-slate-500 font-medium">{{ userRole }}</p>
+                <p class="text-xs text-slate-500 font-medium">{{ userRoleDisplayName }}</p>
             </div>
         </div>
         

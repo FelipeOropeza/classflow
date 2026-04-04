@@ -7,6 +7,12 @@ use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TeacherLinkController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\GradeController;
+use App\Http\Controllers\GuardianController;
+use App\Http\Controllers\AssessmentController;
+use App\Http\Controllers\TermController;
+use App\Http\Controllers\SchoolEventController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -20,8 +26,9 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // School Management
-    Route::get('/academic-years', [DashboardController::class, 'index'])->name('academic-years.index');
+    // Academic Periods
+    Route::get('/terms', [TermController::class, 'index'])->name('terms.index');
+    Route::patch('/terms/{term}', [TermController::class, 'update'])->name('terms.update');
     
     // Subjects
     Route::get('/subjects', [SubjectController::class, 'index'])->name('subjects.index');
@@ -47,4 +54,23 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/academic-links', [TeacherLinkController::class, 'index'])->name('academic-links.index');
     Route::post('/academic-links', [TeacherLinkController::class, 'store'])->name('academic-links.store');
     Route::delete('/academic-links/{link}', [TeacherLinkController::class, 'destroy'])->name('academic-links.destroy');
+
+    // Attendance (Class Diary)
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+
+    // Grades (Academic Performance)
+    Route::get('/grades', [GradeController::class, 'index'])->name('grades.index');
+    Route::post('/grades', [GradeController::class, 'store'])->name('grades.store');
+
+    // Assessments Management
+    Route::get('/assessments', [AssessmentController::class, 'index'])->name('assessments.index');
+    Route::post('/assessments', [AssessmentController::class, 'store'])->name('assessments.store');
+
+    // School Calendar
+    Route::resource('school-events', SchoolEventController::class);
+    
+    // Guardian Portal
+    Route::get('/guardian/report-card', [GuardianController::class, 'reportCard'])->name('guardian.report-card');
+    Route::get('/guardian/attendance', [GuardianController::class, 'attendance'])->name('guardian.attendance');
 });
