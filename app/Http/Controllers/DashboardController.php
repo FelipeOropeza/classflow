@@ -64,14 +64,13 @@ class DashboardController extends Controller
             
             // Verificar chamadas pendentes HOJE
             $today = date('Y-m-d');
-            $doneToday = Attendance::whereIn('subject_id', $myLinks->pluck('subject_id'))
-                ->where('date', $today)
-                ->distinct('subject_id')
-                ->pluck('subject_id')
+            $doneTodayIds = \App\Models\ClassDiary::whereIn('class_subject_id', $myLinks->pluck('id'))
+                ->where('diary_date', $today)
+                ->pluck('class_subject_id')
                 ->toArray();
             
-            $data['pendingAttendance'] = $myLinks->filter(fn($l) => !in_array($l->subject_id, $doneToday))
-                ->map(fn($l) => "{$l->schoolClass->name} - {$l->subject->name}");
+            $data['pendingAttendance'] = $myLinks->filter(fn($l) => !in_array($l->id, $doneTodayIds))
+                ->map(fn($l) => "{$l->schoolClass->name} - {$l->subject->name}")->values()->toArray();
         }
 
         elseif ($user->role === 'guardian') {

@@ -72,5 +72,6 @@ Route::middleware(['auth'])->group(function () {
     
     // Guardian Portal
     Route::get('/guardian/report-card', [GuardianController::class, 'reportCard'])->name('guardian.report-card');
+    Route::get('/guardian/report-card/pdf', [GuardianController::class, 'exportPdf'])->name('guardian.report-card.pdf');
     Route::get('/guardian/attendance', [GuardianController::class, 'attendance'])->name('guardian.attendance');
 });

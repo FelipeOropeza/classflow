@@ -10,6 +10,7 @@ use App\Models\Attendance;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class GuardianController extends Controller
 {
@@ -49,7 +50,9 @@ class GuardianController extends Controller
                 'terms' => [],
                 'final_average' => 0,
                 'total_absences' => Attendance::where('enrollment_id', $enrollment->id)
-                    ->where('subject_id', $cs->subject_id)
+                    ->whereHas('classDiary', function($q) use ($cs) {
+                        $q->where('class_subject_id', $cs->id);
+                    })
                     ->where('status', 'absent')
                     ->count()
             ];
@@ -90,6 +93,69 @@ class GuardianController extends Controller
         ]);
     }
 
+    public function exportPdf(Request $request)
+    {
+        $user = Auth::user();
+        $student = Student::with(['enrollments.schoolClass', 'enrollments.academicYear'])->where('guardian_id', $user->id)->findOrFail($request->student_id);
+        
+        $enrollment = $student->enrollments()->latest()->first();
+        if (!$enrollment) {
+            abort(404, 'Matrícula não encontrada.');
+        }
+
+        $classSubjects = \App\Models\ClassSubject::with('subject')->where('class_id', $enrollment->class_id)->get();
+        $terms = Term::where('academic_year_id', $enrollment->academic_year_id)->orderBy('start_date')->get();
+
+        $report = [];
+        foreach ($classSubjects as $cs) {
+            $subjectData = [
+                'name' => $cs->subject->name,
+                'terms' => [],
+                'final_average' => 0,
+                'total_absences' => Attendance::where('enrollment_id', $enrollment->id)
+                    ->whereHas('classDiary', function($q) use ($cs) {
+                        $q->where('class_subject_id', $cs->id);
+                    })
+                    ->where('status', 'absent')
+                    ->count()
+            ];
+
+            $sumOfAverages = 0;
+            $termsWithGrades = 0;
+
+            foreach ($terms as $term) {
+                $grades = Grade::where('enrollment_id', $enrollment->id)
+                    ->where('subject_id', $cs->subject_id)
+                    ->where('term_id', $term->id)
+                    ->get();
+
+                $average = $grades->count() > 0 ? $grades->avg('score') : null;
+                $subjectData['terms'][] = [
+                    'term_name' => $term->name,
+                    'average' => $average !== null ? round($average, 1) : '-'
+                ];
+
+                if ($average !== null) {
+                    $sumOfAverages += $average;
+                    $termsWithGrades++;
+                }
+            }
+
+            $subjectData['final_average'] = $termsWithGrades > 0 ? round($sumOfAverages / 4, 1) : '-';
+            $report[] = $subjectData;
+        }
+
+        $pdf = Pdf::loadView('pdf.report_card', [
+            'student' => $student,
+            'className' => $enrollment->schoolClass->name,
+            'year' => $enrollment->academicYear->name ?? date('Y'),
+            'terms' => $terms,
+            'report' => $report
+        ]);
+
+        return $pdf->stream('boletim_' . \Illuminate\Support\Str::slug($student->name) . '.pdf');
+    }
+
     public function attendance(Request $request)
     {
         $user = Auth::user();
@@ -127,9 +193,10 @@ class GuardianController extends Controller
 
             foreach ($terms as $term) {
                 $absences = Attendance::where('enrollment_id', $enrollment->id)
-                    ->where('subject_id', $cs->subject_id)
+                    ->whereHas('classDiary', function($q) use ($cs, $term) {
+                        $q->where('class_subject_id', $cs->id)->where('term_id', $term->id);
+                    })
                     ->where('status', 'absent')
-                    ->whereBetween('date', [$term->start_date, $term->end_date])
                     ->count();
 
                 $subjectData['terms'][] = [

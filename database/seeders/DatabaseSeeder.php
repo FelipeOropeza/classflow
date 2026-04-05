@@ -44,21 +44,21 @@ class DatabaseSeeder extends Seeder
         // 2. Criar Usuários de Teste (Admin, Professor, Responsável)
         User::create([
             'name' => 'Admin ClassFlow',
-            'email' => 'admin@classflow.com',
+            'email' => 'admin@classflow.com',   
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
 
         $teacher = User::create([
             'name' => 'Prof. Ricardo Oliveira',
-            'email' => 'professor@classflow.com',
+            'email' => 'professor@classflow.com',   
             'password' => Hash::make('password'),
             'role' => 'teacher',
         ]);
 
         $guardian = User::create([
-            'name' => 'Maria Silva (Responsável)',
-            'email' => 'pais@classflow.com',
+            'name' => 'Maria Silva (Responsável)',  
+            'email' => 'pais@classflow.com',    
             'password' => Hash::make('password'),
             'role' => 'guardian',
         ]);

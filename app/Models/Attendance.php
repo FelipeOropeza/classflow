@@ -11,8 +11,7 @@ class Attendance extends Model
 
     protected $fillable = [
         'enrollment_id',
-        'subject_id',
-        'date',
+        'class_diary_id',
         'status',
         'observation'
     ];
@@ -22,8 +21,8 @@ class Attendance extends Model
         return $this->belongsTo(Enrollment::class);
     }
 
-    public function subject(): BelongsTo
+    public function classDiary(): BelongsTo
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsTo(ClassDiary::class);
     }
 }

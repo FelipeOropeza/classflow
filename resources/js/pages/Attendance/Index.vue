@@ -34,6 +34,8 @@ const props = defineProps<{
   date: string;
   enrollments: Enrollment[];
   existingAttendance: Record<number, any>;
+  diary: { taught_content: string; homework: string } | null;
+  holiday: { title: string; description: string; type: string } | null;
   isLocked: boolean;
   canEdit: boolean;
 }>();
@@ -44,6 +46,8 @@ const selectedDate = ref(props.date || new Date().toISOString().split('T')[0]);
 const form = useForm({
   link_id: props.selectedLink?.id || '',
   date: props.date || '',
+  taught_content: props.diary?.taught_content || '',
+  homework: props.diary?.homework || '',
   attendance: [] as { enrollment_id: number; status: string; observation: string }[]
 });
 
@@ -138,17 +142,50 @@ const submit = () => {
               >
               <CalendarDays class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" :size="20" />
             </div>
+
+        <!-- Global Validation Errors -->
+        <div v-if="$page.props.errors && Object.keys($page.props.errors).length > 0" 
+             class="p-6 bg-rose-50 border border-rose-100 rounded-3xl flex items-start gap-4 text-rose-600 animate-in slide-in-from-top duration-500">
+           <AlertCircle class="shrink-0 mt-0.5" :size="20" />
+           <div>
+              <h4 class="font-bold text-sm leading-tight">Ações Pendentes ou Restrições</h4>
+              <ul class="mt-1 list-disc list-inside text-[11px] font-bold space-y-0.5 opacity-90">
+                 <li v-for="(error, key) in $page.props.errors" :key="key">{{ error }}</li>
+              </ul>
+           </div>
+        </div>
           </div>
         </div>
 
         <!-- Disclaimer Data Retroativa/Futura -->
-        <div v-if="selectedDate !== new Date().toISOString().split('T')[0] && selectedLink" class="p-6 bg-amber-50 rounded-3xl border border-amber-100 flex items-start gap-4 text-amber-700 animate-in fade-in duration-500">
+        <div v-if="selectedDate !== new Date().toISOString().split('T')[0] && selectedLink && !holiday" class="p-6 bg-amber-50 rounded-3xl border border-amber-100 flex items-start gap-4 text-amber-700 animate-in fade-in duration-500">
            <AlertTriangle class="shrink-0 mt-0.5" :size="22" />
            <div>
               <h4 class="font-bold text-lg leading-tight mb-1">Aviso de Restrição Temporal</h4>
               <p class="text-sm font-medium leading-relaxed opacity-90">
                  De acordo com as diretrizes de segurança escolar, a chamada só pode ser realizada para o dia atual. O modo de edição está <b>desabilitado</b> para datas retroativas ou futuras.
               </p>
+           </div>
+        </div>
+
+        <!-- Holiday / Recess Alert -->
+        <div v-if="holiday && selectedLink" class="p-8 bg-indigo-900 rounded-[32px] border border-indigo-700 shadow-2xl shadow-indigo-200/50 flex flex-col md:flex-row items-center gap-6 text-white animate-in zoom-in-95 duration-500 relative overflow-hidden group">
+           <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+           <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <CalendarDays :size="32" class="text-indigo-200" />
+           </div>
+           <div class="flex-1 text-center md:text-left space-y-1">
+              <span class="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-indigo-300 border border-white/5">
+                 {{ holiday.type === 'holiday' ? 'Feriado Nacional' : 'Recesso Escolar' }}
+              </span>
+              <h4 class="font-bold text-2xl tracking-tight">{{ holiday.title }}</h4>
+              <p class="text-indigo-100/70 text-sm font-medium leading-relaxed">
+                 {{ holiday.description || 'Não existem atividades letivas programadas para esta data conforme o calendário institucional.' }}
+              </p>
+           </div>
+           <div class="flex items-center gap-2 px-6 py-3 bg-white/10 rounded-2xl border border-white/10 font-bold text-sm backdrop-blur-sm">
+              <Lock :size="18" class="text-indigo-300" />
+              Sistema Suspenso
            </div>
         </div>
 
@@ -160,8 +197,8 @@ const submit = () => {
                 <GraduationCap :size="24" />
               </div>
               <div>
-                <h3 class="text-xl font-bold text-slate-900">Alunos Matriculados</h3>
-                <p class="text-slate-500 text-sm font-medium">Chamada para {{ selectedLink.school_class.name }} | {{ selectedLink.subject.name }}</p>
+                <h3 class="text-xl font-bold text-slate-900">Registro de Aula</h3>
+                <p class="text-slate-500 text-sm font-medium">Chamada e Diário para {{ selectedLink.school_class.name }} | {{ selectedLink.subject.name }}</p>
               </div>
             </div>
             
@@ -173,14 +210,48 @@ const submit = () => {
             >
                <Save v-if="!form.processing" :size="20" />
                <div v-else class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-               {{ form.processing ? 'Enviando...' : 'Finalizar & Travar' }}
+               {{ form.processing ? 'Finalizar & Enviar Diário' : 'Finalizar & Enviar Diário' }}
             </button>
             <div v-else class="flex flex-col items-end">
                <div class="text-rose-500 font-bold flex items-center gap-1.5 px-4 py-2 bg-rose-50 rounded-xl border border-rose-100">
                   <Lock :size="16" />
-                  Edição Proibida
+                  Diário Trancado
                </div>
                <p class="text-[10px] text-slate-400 font-bold uppercase mt-2 tracking-widest">Enviado por {{ selectedLink.teacher?.name }}</p>
+            </div>
+          </div>
+
+          <!-- New: Class Diary Inputs -->
+          <div class="p-8 bg-slate-50/20 border-b border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-3">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                Conteúdo Ministrado <span class="text-rose-500">*</span>
+              </label>
+              <textarea 
+                v-model="form.taught_content"
+                :disabled="!canEdit"
+                placeholder="O que foi lecionado nesta aula?"
+                :class="[
+                  'w-full bg-white border rounded-2xl p-4 text-sm font-medium transition-all min-h-[100px] resize-none disabled:opacity-70 disabled:bg-slate-50 outline-none focus:ring-4',
+                  form.errors.taught_content ? 'border-rose-300 focus:ring-rose-500/10 focus:border-rose-500 text-rose-900' : 'border-slate-200 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-700'
+                ]"
+              ></textarea>
+              <p v-if="form.errors.taught_content" class="text-[11px] font-bold text-rose-500 ml-1 mt-1">{{ form.errors.taught_content }}</p>
+            </div>
+            <div class="space-y-3">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                Tarefa de Casa (Homework)
+              </label>
+              <textarea 
+                v-model="form.homework"
+                :disabled="!canEdit"
+                placeholder="Quais exercícios ficam para casa?"
+                :class="[
+                  'w-full bg-white border rounded-2xl p-4 text-sm font-medium transition-all min-h-[100px] resize-none disabled:opacity-70 disabled:bg-slate-50 outline-none focus:ring-4',
+                  form.errors.homework ? 'border-rose-300 focus:ring-rose-500/10 focus:border-rose-500 text-rose-900' : 'border-slate-200 focus:ring-indigo-500/10 focus:border-indigo-500 text-slate-700'
+                ]"
+              ></textarea>
+              <p v-if="form.errors.homework" class="text-[11px] font-bold text-rose-500 ml-1 mt-1">{{ form.errors.homework }}</p>
             </div>
           </div>
 
