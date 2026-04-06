@@ -15,6 +15,8 @@ use App\Http\Controllers\TermController;
 use App\Http\Controllers\SchoolEventController;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\EnrollmentController;
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -25,6 +27,10 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Enrollments & Progression (Board of Class)
+    Route::get('/enrollments/review', [EnrollmentController::class, 'review'])->name('enrollments.review');
+    Route::patch('/enrollments/{enrollment}/status', [EnrollmentController::class, 'updateStatus'])->name('enrollments.status.update');
     
     // Academic Periods
     Route::get('/terms', [TermController::class, 'index'])->name('terms.index');
@@ -74,4 +80,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/guardian/report-card', [GuardianController::class, 'reportCard'])->name('guardian.report-card');
     Route::get('/guardian/report-card/pdf', [GuardianController::class, 'exportPdf'])->name('guardian.report-card.pdf');
     Route::get('/guardian/attendance', [GuardianController::class, 'attendance'])->name('guardian.attendance');
+    Route::get('/guardian/student/create', [GuardianController::class, 'createStudent'])->name('guardian.student.create');
+    Route::post('/guardian/student', [GuardianController::class, 'storeStudent'])->name('guardian.student.store');
 });

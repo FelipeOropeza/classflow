@@ -79,12 +79,13 @@ class DashboardController extends Controller
             $students = Student::where('guardian_id', $user->id)->get();
             
             $data['myChildren'] = $students->map(function($student) {
-                $enrollment = Enrollment::where('student_id', $student->id)->latest()->first();
+                $enrollment = Enrollment::with('schoolClass')->where('student_id', $student->id)->latest()->first();
                 return [
                     'id' => $student->id,
                     'name' => $student->name,
-                    'class' => $enrollment?->schoolClass->name ?? 'N/A',
-                    'attendanceRate' => 95, // Mock por enquanto
+                    'class' => $enrollment?->schoolClass?->name ?? 'Aguardando Enturmação',
+                    'status' => $enrollment?->status ?? 'pending',
+                    'attendanceRate' => 100, // Mock por enquanto
                 ];
             });
 

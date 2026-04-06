@@ -19,7 +19,9 @@ import {
   CalendarDays,
   Target,
   Baby,
-  MoreHorizontal
+  MoreHorizontal,
+  UserPlus,
+  ShieldCheck
 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
@@ -235,27 +237,72 @@ const isGuardian = computed(() => props.role === 'guardian');
 
         <!-- 3. Guardian View -->
         <div v-if="isGuardian" class="space-y-10">
+           
+           <!-- Add Student Quick Action -->
+           <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div class="md:col-span-2 bg-indigo-600 rounded-[32px] p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden group shadow-2xl shadow-indigo-200/50">
+                 <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+                 <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 shrink-0">
+                    <UserPlus :size="32" class="text-white" />
+                 </div>
+                 <div class="flex-1 text-center md:text-left space-y-2 relative z-10">
+                    <h3 class="text-xl font-bold text-white tracking-tight">Expandir sua jornada escolar</h3>
+                    <p class="text-indigo-100 text-sm font-medium leading-relaxed">Cadastre um novo dependente no sistema ClassFlow para iniciar o processo de matrícula.</p>
+                 </div>
+                 <Link :href="route('guardian.student.create')" class="px-8 py-3 bg-white text-indigo-600 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-xl active:scale-95 relative z-10">
+                    Cadastrar Aluno
+                 </Link>
+              </div>
+
+              <div class="bg-white border border-slate-100 p-8 rounded-[32px] flex flex-col items-center justify-center text-center space-y-4">
+                 <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+                    <ShieldCheck :size="24" />
+                 </div>
+                 <div>
+                    <h4 class="text-sm font-bold text-slate-900 tracking-tight">Privacidade Garantida</h4>
+                    <p class="text-[11px] text-slate-400 font-medium px-4">Seus dados e de seus filhos são protegidos pelas diretrizes de segurança escolar.</p>
+                 </div>
+              </div>
+           </div>
+
            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div v-for="child in myChildren" :key="child.id" class="bg-white border border-slate-100 p-8 rounded-2xl space-y-6 hover:shadow-xl hover:shadow-slate-200/20 transition-all">
+             <div v-for="child in myChildren" :key="child.id" 
+               :class="[
+                 'bg-white border p-8 rounded-2xl space-y-6 transition-all relative overflow-hidden',
+                 child.status === 'pending' ? 'border-amber-100 bg-amber-50/10' : 'border-slate-100 hover:shadow-xl hover:shadow-slate-200/20'
+               ]"
+             >
+                <!-- Pending Badge Overlay -->
+                <div v-if="child.status === 'pending'" class="absolute top-4 right-4 px-2.5 py-1 bg-amber-100/50 border border-amber-200/50 rounded-lg text-[9px] font-black uppercase text-amber-600 tracking-widest animate-pulse">
+                   Aguardando Secretaria
+                </div>
+
                 <div class="flex items-start justify-between">
                    <div class="flex items-center gap-5">
-                      <div class="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
+                      <div class="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 transition-colors">
                          <Users :size="24" />
                       </div>
                       <div>
                          <h4 class="text-xl font-bold text-slate-900 leading-none">{{ child.name }}</h4>
-                         <p class="text-xs font-bold text-indigo-600 mt-2">{{ child.class }}</p>
+                         <p :class="['text-xs font-bold mt-2 uppercase tracking-widest opacity-80', child.status === 'pending' ? 'text-amber-500' : 'text-indigo-600']">
+                            {{ child.class }}
+                         </p>
                       </div>
                    </div>
-                   <div class="text-right">
+                   <div v-if="child.status !== 'pending'" class="text-right">
                       <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Frequência</p>
                       <p class="text-lg font-black text-slate-900 leading-none mt-1">{{ child.attendanceRate }}%</p>
                    </div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-3 pt-2">
+                <div v-if="child.status !== 'pending'" class="grid grid-cols-2 gap-3 pt-2">
                    <Link :href="route('guardian.report-card', { student_id: child.id })" class="py-3 px-4 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase text-center hover:bg-slate-800 transition-all">Boletim Digital</Link>
                    <Link :href="route('guardian.attendance', { student_id: child.id })" class="py-3 px-4 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase text-center hover:bg-slate-50 transition-all">Relatório Faltas</Link>
+                </div>
+                <div v-else class="p-4 bg-white border border-amber-50 rounded-xl text-center">
+                   <p class="text-[11px] text-amber-600 font-bold leading-relaxed italic opacity-80">
+                      O processo de enturmação documental está sendo processado pela secretaria escolar. Em breve as notas e presenças estarão disponíveis nesta tela.
+                   </p>
                 </div>
              </div>
            </div>

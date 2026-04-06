@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
+use App\Models\Enrollment;
+use App\Models\AcademicYear;
 use App\Models\Term;
 use App\Models\Subject;
 use App\Models\Grade;
@@ -11,9 +13,46 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 class GuardianController extends Controller
 {
+    public function createStudent()
+    {
+        return Inertia::render('Guardian/CreateStudent');
+    }
+
+    public function storeStudent(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'birth_date' => 'required|date',
+        ]);
+
+        $user = Auth::user();
+
+        // Gerar RGM aleatório unico
+        $registrationNumber = 'MAT-' . strtoupper(Str::random(8));
+
+        $student = Student::create([
+            'name' => $validated['name'],
+            'birth_date' => $validated['birth_date'],
+            'registration_number' => $registrationNumber,
+            'guardian_id' => $user->id,
+        ]);
+
+        // Criar matricula PENDENTE para o ano letivo atual
+        $academicYear = AcademicYear::where('status', 'active')->first() ?? AcademicYear::latest()->first();
+
+        Enrollment::create([
+            'student_id' => $student->id,
+            'academic_year_id' => $academicYear->id,
+            'status' => 'pending', // Fica pendente para a diretoria enturmar
+            'class_id' => null,     // Começa sem turma
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Cadastro do aluno realizado com sucesso! Aguarde a diretoria realizar a enturmação.');
+    }
     public function reportCard(Request $request)
     {
         $user = Auth::user();
