@@ -14,7 +14,7 @@ import {
   ArrowLeft,
   ArrowUpRight
 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 interface Student {
   id: number;
@@ -47,9 +47,28 @@ const selectStudent = (id: number) => {
 const getGradeStyle = (grade: number | string) => {
   if (grade === '-') return 'text-slate-300 font-medium';
   const val = Number(grade);
-  if (val < 7) return 'text-rose-500 font-bold';
+  if (val < 5) return 'text-rose-500 font-bold';
   return 'text-slate-700 font-bold';
 };
+
+const overallAverage = computed(() => {
+  const finalGrades = props.report
+    .map(item => item.final_average)
+    .filter(avg => typeof avg === 'number') as number[];
+  
+  if (finalGrades.length === 0) return '-';
+  const sum = finalGrades.reduce((a, b) => a + b, 0);
+  return (sum / finalGrades.length).toFixed(1);
+});
+
+const performanceLabel = computed(() => {
+  const avg = Number(overallAverage.value);
+  if (isNaN(avg)) return 'Aguardando Notas';
+  if (avg >= 9) return 'Desempenho de Excelência';
+  if (avg >= 7) return 'Aproveitamento Superior';
+  if (avg >= 5) return 'Dentro das Metas';
+  return 'Necessita de Atenção';
+});
 </script>
 
 <template>
@@ -106,12 +125,14 @@ const getGradeStyle = (grade: number | string) => {
 
          <div class="bg-white border border-slate-100 p-6 rounded-xl space-y-3">
             <div class="flex items-center justify-between">
-               <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest font-serif">Média Geral</p>
+               <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Média Geral</p>
                <TrendingUp :size="14" class="text-indigo-400" />
             </div>
             <div class="flex items-end gap-2">
-               <p class="text-2xl font-black text-slate-900 leading-none">8.4</p>
-               <span class="text-[10px] font-bold text-emerald-500 mb-0.5 tracking-tighter">Aproveitamento Superior</span>
+               <p class="text-2xl font-black text-slate-900 leading-none">{{ overallAverage }}</p>
+               <span :class="['text-[10px] font-bold mb-0.5 tracking-tighter', Number(overallAverage) >= 5 ? 'text-emerald-500' : 'text-rose-500']">
+                 {{ performanceLabel }}
+               </span>
             </div>
          </div>
 
@@ -120,7 +141,7 @@ const getGradeStyle = (grade: number | string) => {
                <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Regras de Aprovação</p>
                <AlertCircle :size="14" class="opacity-40" />
             </div>
-            <p class="text-sm font-bold tracking-tight">Média mínima 7.0 para aprovação direta</p>
+            <p class="text-sm font-bold tracking-tight">Média mínima 5.0 para aprovação direta</p>
          </div>
       </div>
 

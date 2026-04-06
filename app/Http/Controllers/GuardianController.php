@@ -42,7 +42,7 @@ class GuardianController extends Controller
         ]);
 
         // Criar matricula PENDENTE para o ano letivo atual
-        $academicYear = AcademicYear::where('status', 'active')->first() ?? AcademicYear::latest()->first();
+        $academicYear = AcademicYear::where('active', true)->first() ?? AcademicYear::latest()->first();
 
         Enrollment::create([
             'student_id' => $student->id,
