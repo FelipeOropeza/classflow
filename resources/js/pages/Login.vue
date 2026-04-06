@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import InputError from '@/Components/InputError.vue';
 import { 
   GraduationCap,
   ArrowRight,
@@ -49,10 +50,11 @@ const submit = () => {
               <input 
                 v-model="form.email"
                 type="email" 
-                required
+                autocomplete="email"
                 placeholder="nome@exemplo.com"
-                class="w-full bg-white border border-slate-200 rounded-xl py-3.5 px-4 text-sm font-medium focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all outline-none"
+                :class="['w-full bg-white border rounded-xl py-3.5 px-4 text-sm font-medium focus:ring-4 transition-all outline-none', form.errors.email ? 'border-red-400 focus:border-red-400 focus:ring-red-400/10' : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900/5']"
               >
+              <InputError :message="form.errors.email" />
            </div>
 
            <!-- Password -->
@@ -65,9 +67,9 @@ const submit = () => {
                  <input 
                    v-model="form.password"
                    :type="showPassword ? 'text' : 'password'" 
-                   required
+                   autocomplete="current-password"
                    placeholder="••••••••"
-                   class="w-full bg-white border border-slate-200 rounded-xl py-3.5 px-4 text-sm font-medium focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all outline-none"
+                   :class="['w-full bg-white border rounded-xl py-3.5 px-4 text-sm font-medium focus:ring-4 transition-all outline-none', form.errors.password ? 'border-red-400 focus:border-red-400 focus:ring-red-400/10' : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900/5']"
                  >
                  <button 
                    type="button"
@@ -78,6 +80,7 @@ const submit = () => {
                     <EyeOff v-else :size="18" />
                  </button>
               </div>
+              <InputError :message="form.errors.password" />
            </div>
         </div>
 

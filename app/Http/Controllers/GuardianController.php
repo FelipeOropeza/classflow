@@ -25,9 +25,17 @@ class GuardianController extends Controller
     public function storeStudent(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'birth_date' => 'required|date',
+            'name'       => 'required|string|min:3|max:255',
+            'birth_date' => 'required|date|before:today',
+        ], [
+            'name.required'       => 'O nome da criança é obrigatório.',
+            'name.min'            => 'O nome deve ter pelo menos 3 caracteres.',
+            'name.max'            => 'O nome não pode ultrapassar 255 caracteres.',
+            'birth_date.required' => 'A data de nascimento é obrigatória.',
+            'birth_date.date'     => 'Informe uma data de nascimento válida.',
+            'birth_date.before'   => 'A data de nascimento não pode ser hoje ou no futuro.',
         ]);
+
 
         $user = Auth::user();
 
