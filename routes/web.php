@@ -32,6 +32,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/enrollments/review', [EnrollmentController::class, 'review'])->name('enrollments.review');
     Route::patch('/enrollments/{enrollment}/status', [EnrollmentController::class, 'updateStatus'])->name('enrollments.status.update');
     
+    // User Governance
+    Route::get('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
+    Route::post('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
+    
     // Academic Periods
     Route::get('/terms', [TermController::class, 'index'])->name('terms.index');
     Route::patch('/terms/{term}', [TermController::class, 'update'])->name('terms.update');

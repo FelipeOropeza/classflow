@@ -16,6 +16,14 @@ class EnrollmentController extends Controller
      */
     public function review()
     {
+        $now = now();
+        $start = now()->setMonth(12)->setDay(5)->startOfDay();
+        $end = now()->setMonth(12)->setDay(12)->endOfDay();
+
+        if (!$now->between($start, $end)) {
+            return redirect()->route('dashboard')->with('error', 'O acesso ao Conselho de Classe só está disponível entre 05/12 e 12/12.');
+        }
+
         $enrollments = Enrollment::with(['student', 'schoolClass'])
             ->where('status', 'active')
             ->get()
@@ -24,8 +32,8 @@ class EnrollmentController extends Controller
                 $grades = Grade::where('enrollment_id', $enrollment->id)->sum('score');
                 $finalScore = $grades / 4;
 
-                // Cálculo de Frequência (Faltas / Total de Aulas)
-                $totalDiaries = ClassDiary::where('class_subject_id', function($q) use ($enrollment) {
+                // Cálculo de Frequência (Faltas / Total de Aulas em TODAS as matérias da turma)
+                $totalDiaries = ClassDiary::whereIn('class_subject_id', function($q) use ($enrollment) {
                     $q->select('id')->from('class_subject')->where('class_id', $enrollment->class_id);
                 })->count();
                 

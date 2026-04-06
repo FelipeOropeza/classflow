@@ -19,30 +19,38 @@ import {
   LogOut,
   ChevronRight,
   Search,
-  Bell
+  Bell,
+  ChevronDown,
+  Settings,
+  FolderOpen
 } from 'lucide-vue-next';
 
 interface MenuItem {
   name: string;
   icon: any;
-  route: string;
-  component: string;
+  route?: string;
+  component?: string;
   roles: string[];
+  children?: MenuItem[];
 }
 
-import { Auth } from '@/types/auth';
 import { PageProps } from '@inertiajs/core';
 
 interface AuthenticatedPageProps extends PageProps {
-  auth: {
-    user: any;
-  }
+  auth: { user: any; }
 }
 
 const isSidebarOpen = ref(true);
+const openMenus = ref<string[]>([]);
 const page = usePage<AuthenticatedPageProps>();
 
 const toggleSidebar = () => isSidebarOpen.value = !isSidebarOpen.value;
+
+const toggleSubmenu = (name: string) => {
+  const index = openMenus.value.indexOf(name);
+  if (index > -1) openMenus.value.splice(index, 1);
+  else openMenus.value.push(name);
+};
 
 const userRoleNames: Record<string, string> = {
   admin: 'Diretoria',
@@ -60,18 +68,41 @@ const userRoleSlug = computed(() => (page.props.auth as any)?.user?.role || 'use
 
 const menuItems: MenuItem[] = [
   { name: 'Dashboard', icon: LayoutDashboard, route: 'dashboard', component: 'Dashboard', roles: ['admin', 'director', 'teacher', 'guardian'] },
-  // Diretoria
-  { name: 'Agenda Escolar', icon: CalendarDays, route: 'school-events.index', component: 'Events/Index', roles: ['admin', 'director'] },
-  { name: 'Períodos Escolares', icon: CalendarDays, route: 'terms.index', component: 'AcademicYears/Terms', roles: ['admin', 'director'] },
-  { name: 'Disciplinas', icon: BookOpen, route: 'subjects.index', component: 'Subjects/Index', roles: ['admin', 'director'] },
-  { name: 'Turmas', icon: Layers, route: 'classes.index', component: 'Classes/Index', roles: ['admin', 'director'] },
-  { name: 'Professores', icon: Users, route: 'teachers.index', component: 'Teachers/Index', roles: ['admin', 'director'] },
-  { name: 'Alunos', icon: GraduationCap, route: 'students.index', component: 'Students/Index', roles: ['admin', 'director'] },
-  { name: 'Vínculos', icon: ShieldCheck, route: 'academic-links.index', component: 'Teachers/AcademicLinks', roles: ['admin', 'director'] },
+  
+  // Diretoria - Agrupado (Acadêmico)
+  { 
+    name: 'Acadêmico', 
+    icon: BookOpen, 
+    roles: ['admin', 'director'],
+    children: [
+      { name: 'Agenda Escolar', icon: CalendarDays, route: 'school-events.index', component: 'Events/Index', roles: ['admin', 'director'] },
+      { name: 'Períodos Letivos', icon: CalendarDays, route: 'terms.index', component: 'AcademicYears/Terms', roles: ['admin', 'director'] },
+      { name: 'Disciplinas', icon: BookOpen, route: 'subjects.index', component: 'Subjects/Index', roles: ['admin', 'director'] },
+      { name: 'Turmas', icon: Layers, route: 'classes.index', component: 'Classes/Index', roles: ['admin', 'director'] },
+    ]
+  },
+
+  // Diretoria - Agrupado (Gestão)
+  {
+    name: 'Gestão Escolar',
+    icon: Users,
+    roles: ['admin', 'director'],
+    children: [
+      { name: 'Professores', icon: Users, route: 'teachers.index', component: 'Teachers/Index', roles: ['admin', 'director'] },
+      { name: 'Alunos', icon: GraduationCap, route: 'students.index', component: 'Students/Index', roles: ['admin', 'director'] },
+      { name: 'Vínculos Docentes', icon: ShieldCheck, route: 'academic-links.index', component: 'Teachers/AcademicLinks', roles: ['admin', 'director'] },
+      { name: 'Responsáveis', icon: Users, route: 'admin.users.index', component: 'Admin/Users/Index', roles: ['admin', 'director'] },
+    ]
+  },
+
+  // Conselho de Classe - Isolado (Acesso restrito)
+  { name: 'Conselho de Classe', icon: BarChart3, route: 'enrollments.review', component: 'Admin/Enrollments/Review', roles: ['admin', 'director'] },
+
   // Professor
-  { name: 'Frequência', icon: ClipboardCheck, route: 'attendance.index', component: 'Attendance/Index', roles: ['teacher'] },
-  { name: 'Planejar Avaliações', icon: ClipboardList, route: 'assessments.index', component: 'Assessments/Index', roles: ['teacher'] },
+  { name: 'Chamada Diária', icon: ClipboardCheck, route: 'attendance.index', component: 'Attendance/Index', roles: ['teacher'] },
+  { name: 'Plano de Avaliação', icon: ClipboardList, route: 'assessments.index', component: 'Assessments/Index', roles: ['teacher'] },
   { name: 'Lançar Notas', icon: BarChart3, route: 'grades.index', component: 'Grades/Index', roles: ['teacher'] },
+  
   // Responsável
   { name: 'Boletim do Filho', icon: Baby, route: 'guardian.report-card', component: 'Guardian/ReportCard', roles: ['guardian'] },
 ];
@@ -79,19 +110,28 @@ const menuItems: MenuItem[] = [
 const filteredMenu = computed(() => {
   return menuItems.filter(item => item.roles.includes(userRoleSlug.value));
 });
+
+const isCurrentRoute = (item: MenuItem) => {
+  if (item.route) return route().current(item.route);
+  if (item.children) return item.children.some(child => child.route && route().current(child.route));
+  return false;
+};
+
+// Verificar se o conselho está aberto
+const isCouncilOpen = computed(() => {
+  const now = new Date();
+  return now.getMonth() === 11 && now.getDate() >= 5 && now.getDate() <= 12;
+});
 </script>
 
 <template>
   <div class="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900">
     <!-- Sidebar -->
     <aside 
-      :class="[
-        'bg-white border-r border-slate-200 transition-all duration-300 flex flex-col z-50 sticky top-0 h-screen',
-        isSidebarOpen ? 'w-64' : 'w-20'
-      ]"
+      :class="['bg-white border-r border-slate-200 transition-all duration-300 flex flex-col z-50 sticky top-0 h-screen', isSidebarOpen ? 'w-64' : 'w-20']"
     >
       <div class="p-6 flex items-center justify-between h-20">
-        <div v-if="isSidebarOpen" class="flex items-center gap-2 overflow-hidden">
+        <div v-if="isSidebarOpen" class="flex items-center gap-2 overflow-hidden animate-in fade-in slide-in-from-left-4">
           <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
              <GraduationCap class="text-white" :size="20" />
           </div>
@@ -103,65 +143,80 @@ const filteredMenu = computed(() => {
         </button>
       </div>
 
-      <nav class="flex-1 px-4 space-y-1.5 mt-4 overflow-y-auto overflow-x-hidden custom-scrollbar">
-        <Link 
-          v-for="item in filteredMenu" 
-          :key="item.name"
-          :href="route(item.route)" 
-          :class="[
-            'flex items-center p-3 rounded-xl transition-all duration-200 group relative',
-            $page.component === item.component || route().current(item.route) ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-          ]"
-        >
-          <component :is="item.icon" :size="20" :stroke-width="($page.component === item.component || route().current(item.route)) ? 2.5 : 2" />
-          <span v-if="isSidebarOpen" class="ml-3 font-medium text-sm transition-opacity duration-300">{{ item.name }}</span>
-          <div v-if="!isSidebarOpen" class="absolute left-16 bg-slate-900 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-             {{ item.name }}
+      <nav class="flex-1 px-4 space-y-1.5 mt-4 overflow-y-auto overflow-x-hidden custom-scrollbar pb-10">
+        <div v-for="item in filteredMenu" :key="item.name">
+          <!-- Parent Item -->
+          <div v-if="item.children && isSidebarOpen">
+             <button 
+               @click="toggleSubmenu(item.name)"
+               :class="['flex items-center justify-between w-full p-3 rounded-xl transition-all duration-200', isCurrentRoute(item) ? 'text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900']"
+             >
+                <div class="flex items-center">
+                   <component :is="item.icon" :size="20" />
+                   <span class="ml-3 font-medium text-sm">{{ item.name }}</span>
+                </div>
+                <ChevronDown :size="14" :class="['transition-transform duration-300', openMenus.includes(item.name) ? 'rotate-180' : '']" />
+             </button>
+             
+             <!-- Children -->
+             <div v-show="openMenus.includes(item.name) || isCurrentRoute(item)" class="ml-9 mt-1 space-y-1 animate-in slide-in-from-top-2 duration-300">
+                <Link v-for="child in item.children" :key="child.name" :href="route(child.route!)"
+                  :class="['flex items-center p-2.5 rounded-lg text-xs font-semibold transition-all', route().current(child.route!) ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50']"
+                >
+                   {{ child.name }}
+                </Link>
+             </div>
           </div>
-        </Link>
+
+          <!-- Single Item -->
+          <div v-else-if="!item.children || !isSidebarOpen" class="relative group">
+             <Link 
+               :href="item.route ? route(item.route) : '#'" 
+               :class="[
+                 'flex items-center p-3 rounded-xl transition-all duration-200',
+                 (item.route && route().current(item.route)) ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900',
+                 (item.name === 'Conselho de Classe' && !isCouncilOpen) ? 'opacity-50 grayscale cursor-not-allowed pointer-events-none' : ''
+               ]"
+             >
+                <component :is="item.icon" :size="20" />
+                <span v-if="isSidebarOpen" class="ml-3 font-medium text-sm">{{ item.name }}</span>
+                <div v-if="item.name === 'Conselho de Classe' && isSidebarOpen && !isCouncilOpen" class="ml-auto text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded tracking-tighter uppercase">Bloqueado</div>
+             </Link>
+             
+             <div v-if="!isSidebarOpen" class="absolute left-16 top-1/2 -translate-y-1/2 bg-slate-900 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-all whitespace-nowrap z-50">
+                {{ item.name }}
+             </div>
+          </div>
+        </div>
       </nav>
 
       <div class="p-4 border-t border-slate-100 bg-white">
-        <div class="flex items-center p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center font-bold shadow-lg shadow-indigo-100 shrink-0">
+        <div class="flex items-center p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-lg shadow-indigo-100 shrink-0">
                 CF
             </div>
             <div v-if="isSidebarOpen" class="ml-3 overflow-hidden">
                 <p class="text-sm font-semibold text-slate-900 truncate">{{ page.props.auth?.user?.name || 'Convidado' }}</p>
-                <p class="text-xs text-slate-500 font-medium">{{ userRoleDisplayName }}</p>
+                <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">{{ userRoleDisplayName }}</p>
             </div>
         </div>
         
-        <Link 
-          as="button"
-          method="post"
-          :href="route('logout')"
-          class="mt-4 flex items-center w-full p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all duration-200 group"
-        >
+        <Link as="button" method="post" :href="route('logout')" class="mt-4 flex items-center w-full p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all duration-200 group">
           <LogOut :size="20" class="group-hover:-translate-x-1 transition-transform" />
           <span v-if="isSidebarOpen" class="ml-3 font-semibold text-sm">Encerrar Sessão</span>
         </Link>
       </div>
     </aside>
 
-    <!-- Main Content -->
     <div class="flex-1 flex flex-col min-w-0">
       <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 h-20 flex items-center justify-between sticky top-0 z-40">
          <div class="flex items-center space-x-3 text-sm text-slate-500">
-            <span class="hover:text-indigo-600 transition-colors cursor-pointer font-medium">Geral</span>
+            <span class="hover:text-indigo-600 transition-colors cursor-pointer font-bold">Unidade Escolar</span>
             <ChevronRight :size="14" class="text-slate-300" />
-            <span class="font-semibold text-slate-900">Painel de Controle</span>
+            <span class="font-bold text-slate-900">{{ $page.component.split('/').pop() }}</span>
          </div>
          
          <div class="flex items-center space-x-6">
-             <div class="relative hidden md:block">
-                <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" :size="16" />
-                <input 
-                  type="text" 
-                  placeholder="Pesquisar..." 
-                  class="bg-slate-100 border-none rounded-xl pl-10 pr-4 py-2 text-sm w-64 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
-                >
-             </div>
              <button class="relative p-2 rounded-xl hover:bg-slate-100 text-slate-500 transition-colors">
                 <Bell :size="20" />
                 <span class="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
@@ -177,17 +232,7 @@ const filteredMenu = computed(() => {
 </template>
 
 <style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #E2E8F0;
-  border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #CBD5E1;
-}
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
 </style>
