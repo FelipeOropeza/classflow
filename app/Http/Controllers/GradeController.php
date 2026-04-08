@@ -21,9 +21,12 @@ class GradeController extends Controller
 
         $user = Auth::user();
         
-        // Buscar vínculos do professor
+        // Buscar vínculos do professor vinculados a turmas ATIVAS
         $links = ClassSubject::with(['schoolClass', 'subject'])
             ->where('teacher_id', $user->id)
+            ->whereHas('schoolClass', function($q) {
+                $q->where('is_active', true);
+            })
             ->get();
 
         $selectedLinkId = $request->input('link_id');
@@ -90,7 +93,11 @@ class GradeController extends Controller
             'grades.*.score' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        $assessment = Assessment::findOrFail($request->assessment_id);
+        $assessment = Assessment::with('classSubject.schoolClass')->findOrFail($request->assessment_id);
+ 
+        if (!$assessment->classSubject->schoolClass->is_active) {
+            return back()->withErrors(['message' => 'Náo é permitido lançar notas para uma turma desativada.']);
+        }
 
         foreach ($request->grades as $gradeData) {
             if ($gradeData['score'] === null || $gradeData['score'] === '') continue;

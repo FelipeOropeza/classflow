@@ -31,13 +31,17 @@ interface MenuItem {
   route?: string;
   component?: string;
   roles: string[];
+  restricted?: boolean;
   children?: MenuItem[];
 }
 
 import { PageProps } from '@inertiajs/core';
 
 interface AuthenticatedPageProps extends PageProps {
-  auth: { user: any; }
+  auth: { 
+    user: any; 
+    hasActiveClasses: boolean;
+  }
 }
 
 const isSidebarOpen = ref(true);
@@ -60,11 +64,11 @@ const userRoleNames: Record<string, string> = {
 };
 
 const userRoleDisplayName = computed(() => {
-  const role = (page.props.auth as any)?.user?.role || 'user';
+  const role = page.props.auth.user?.role || 'user';
   return userRoleNames[role as string] || 'Usuário';
 });
 
-const userRoleSlug = computed(() => (page.props.auth as any)?.user?.role || 'user');
+const userRoleSlug = computed(() => page.props.auth.user?.role || 'user');
 
 const menuItems: MenuItem[] = [
   { name: 'Dashboard', icon: LayoutDashboard, route: 'dashboard', component: 'Dashboard', roles: ['admin', 'director', 'teacher', 'guardian'] },
@@ -99,10 +103,24 @@ const menuItems: MenuItem[] = [
   { name: 'Conselho de Classe', icon: BarChart3, route: 'enrollments.review', component: 'Admin/Enrollments/Review', roles: ['admin', 'director'] },
 
   // Professor
-  { name: 'Chamada Diária', icon: ClipboardCheck, route: 'attendance.index', component: 'Attendance/Index', roles: ['teacher'] },
+  { 
+    name: 'Chamada Diária', 
+    icon: ClipboardCheck, 
+    route: 'attendance.index', 
+    component: 'Attendance/Index', 
+    roles: ['teacher'],
+    restricted: true 
+  },
   { name: 'Meu Horário', icon: Calendar, route: 'teacher.schedule', component: 'Teacher/Schedule', roles: ['teacher'] },
   { name: 'Plano de Avaliação', icon: ClipboardList, route: 'assessments.index', component: 'Assessments/Index', roles: ['teacher'] },
-  { name: 'Lançar Notas', icon: BarChart3, route: 'grades.index', component: 'Grades/Index', roles: ['teacher'] },
+  { 
+    name: 'Lançar Notas', 
+    icon: BarChart3, 
+    route: 'grades.index', 
+    component: 'Grades/Index', 
+    roles: ['teacher'],
+    restricted: true 
+  },
   
   // Responsável
   { name: 'Boletim do Filho', icon: Baby, route: 'guardian.report-card', component: 'Guardian/ReportCard', roles: ['guardian'] },
@@ -176,11 +194,13 @@ const isCouncilOpen = computed(() => {
                :class="[
                  'flex items-center p-3 rounded-xl transition-all duration-200',
                  (item.route && route().current(item.route)) ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900',
-                 (item.name === 'Conselho de Classe' && !isCouncilOpen) ? 'opacity-50 grayscale cursor-not-allowed pointer-events-none' : ''
+                 (item.name === 'Conselho de Classe' && !isCouncilOpen) ? 'opacity-50 grayscale cursor-not-allowed pointer-events-none' : '',
+                 (item.restricted && !page.props.auth.hasActiveClasses) ? 'opacity-50 grayscale cursor-not-allowed pointer-events-none' : ''
                ]"
              >
                 <component :is="item.icon" :size="20" />
                 <span v-if="isSidebarOpen" class="ml-3 font-medium text-sm">{{ item.name }}</span>
+                <div v-if="item.restricted && isSidebarOpen && !page.props.auth.hasActiveClasses" class="ml-auto text-[9px] font-black text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded tracking-tighter uppercase whitespace-nowrap">Turmas Inativas</div>
                 <div v-if="item.name === 'Conselho de Classe' && isSidebarOpen && !isCouncilOpen" class="ml-auto text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded tracking-tighter uppercase">Bloqueado</div>
              </Link>
              
@@ -197,7 +217,7 @@ const isCouncilOpen = computed(() => {
                 CF
             </div>
             <div v-if="isSidebarOpen" class="ml-3 overflow-hidden">
-                <p class="text-sm font-semibold text-slate-900 truncate">{{ page.props.auth?.user?.name || 'Convidado' }}</p>
+                <p class="text-sm font-semibold text-slate-900 truncate">{{ page.props.auth.user?.name || 'Convidado' }}</p>
                 <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">{{ userRoleDisplayName }}</p>
             </div>
         </div>
@@ -214,7 +234,7 @@ const isCouncilOpen = computed(() => {
          <div class="flex items-center space-x-3 text-sm text-slate-500">
             <span class="hover:text-indigo-600 transition-colors cursor-pointer font-bold">Unidade Escolar</span>
             <ChevronRight :size="14" class="text-slate-300" />
-            <span class="font-bold text-slate-900">{{ $page.component.split('/').pop() }}</span>
+            <span class="font-bold text-slate-900">{{ page.component.split('/').pop() }}</span>
          </div>
          
          <div class="flex items-center space-x-6">

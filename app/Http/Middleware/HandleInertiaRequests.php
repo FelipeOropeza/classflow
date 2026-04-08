@@ -35,11 +35,28 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $hasActiveClasses = true; // Default para admin/guardian
+
+        if ($user && $user->role === 'teacher') {
+            $hasActiveClasses = \App\Models\ClassSubject::where('teacher_id', $user->id)
+                ->whereHas('schoolClass', function($q) {
+                    $q->where('is_active', true);
+                })
+                ->exists();
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'hasActiveClasses' => $hasActiveClasses,
+            ],
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'message' => $request->session()->get('message'),
             ],
         ];
     }
