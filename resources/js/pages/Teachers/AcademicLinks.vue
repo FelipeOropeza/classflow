@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { 
@@ -11,7 +11,8 @@ import {
   BookOpen,
   Users,
   Layers,
-  ArrowRight
+  ArrowRight,
+  AlertCircle
 } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -28,6 +29,13 @@ const form = useForm({
   teacher_id: '',
   class_id: '',
   subject_id: '',
+});
+
+const filteredTeachers = computed(() => {
+  if (!form.subject_id) return [];
+  return props.teachers.filter(t => 
+    t.subjects?.some((s: any) => s.id === Number(form.subject_id))
+  );
 });
 
 const openModal = () => isModalOpen.value = true;
@@ -200,11 +208,22 @@ const deleteLink = (id: number) => {
                   <select 
                     v-model="form.teacher_id"
                     required
-                    class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-600/20 focus:bg-white focus:ring-4 focus:ring-indigo-600/5 transition-all text-ellipsis"
+                    :disabled="!form.subject_id"
+                    class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-600/20 focus:bg-white focus:ring-4 focus:ring-indigo-600/5 transition-all text-ellipsis disabled:opacity-50"
                   >
-                    <option value="" disabled selected>Selecione o professor...</option>
-                    <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }}</option>
+                    <option value="" disabled selected>
+                      {{ !form.subject_id ? 'Selecione a disciplina primeiro' : 'Selecione o professor...' }}
+                    </option>
+                    <option v-for="t in filteredTeachers" :key="t.id" :value="t.id">{{ t.name }}</option>
                   </select>
+                </div>
+                
+                <!-- Qualification Warning -->
+                <div v-if="form.subject_id && filteredTeachers.length === 0" class="mt-2 p-3 rounded-xl bg-rose-50 border border-rose-100 flex gap-2 items-start">
+                  <AlertCircle :size="16" class="text-rose-500 shrink-0 mt-0.5" />
+                  <p class="text-[10px] font-bold text-rose-600 leading-tight">
+                    Nenhum professor habilitado para esta disciplina. Cadastre as especialidades no módulo de Professores.
+                  </p>
                 </div>
               </div>
 

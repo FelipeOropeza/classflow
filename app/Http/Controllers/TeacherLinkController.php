@@ -30,7 +30,7 @@ class TeacherLinkController extends Controller
             'links' => $links,
             'classes' => SchoolClass::where('academic_year_id', $activeYear?->id)->get(),
             'subjects' => Subject::all(),
-            'teachers' => User::where('role', 'teacher')->get(),
+            'teachers' => User::where('role', 'teacher')->with('subjects')->get(),
         ]);
     }
 

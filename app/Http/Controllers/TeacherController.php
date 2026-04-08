@@ -12,7 +12,8 @@ class TeacherController extends Controller
     public function index()
     {
         return Inertia::render('Teachers/Index', [
-            'teachers' => User::where('role', 'teacher')->latest()->get(),
+            'teachers' => User::where('role', 'teacher')->with('subjects')->latest()->get(),
+            'subjects' => \App\Models\Subject::all(),
         ]);
     }
 
@@ -22,14 +23,20 @@ class TeacherController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8',
+            'subject_ids' => 'nullable|array',
+            'subject_ids.*' => 'exists:subjects,id',
         ]);
 
-        User::create([
+        $teacher = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => 'teacher',
         ]);
+
+        if (!empty($validated['subject_ids'])) {
+            $teacher->subjects()->sync($validated['subject_ids']);
+        }
 
         return redirect()->route('teachers.index');
     }
@@ -40,12 +47,18 @@ class TeacherController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $teacher->id,
             'password' => 'nullable|string|min:8',
+            'subject_ids' => 'nullable|array',
+            'subject_ids.*' => 'exists:subjects,id',
         ]);
 
         $teacher->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
         ]);
+
+        if (isset($validated['subject_ids'])) {
+            $teacher->subjects()->sync($validated['subject_ids']);
+        }
 
         if ($request->filled('password')) {
             $teacher->update(['password' => Hash::make($validated['password'])]);

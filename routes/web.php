@@ -58,6 +58,7 @@ Route::middleware(['auth'])->group(function () {
     // Schedules (Timetables)
     Route::get('/classes/{schoolClass}/schedules', [ScheduleController::class, 'index'])->name('classes.schedules.index');
     Route::post('/classes/{schoolClass}/schedules', [ScheduleController::class, 'store'])->name('classes.schedules.store');
+    Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('classes.schedules.destroy');
     Route::post('/classes/{schoolClass}/schedules/generate', [ScheduleController::class, 'generate'])->name('classes.schedules.generate');
     Route::get('/classes/schedules/all/pdf', [SchedulePdfController::class, 'exportAll'])->name('classes.schedules.pdf-all');
     Route::get('/classes/{schoolClass}/schedules/pdf', [SchedulePdfController::class, 'export'])->name('classes.schedules.pdf');

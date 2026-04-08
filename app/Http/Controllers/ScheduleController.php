@@ -85,4 +85,18 @@ class ScheduleController extends Controller
             return back()->withErrors(['schedule' => 'Erro ao gerar: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Remover uma aula do quadro de horários.
+     */
+    public function destroy(Request $request, Schedule $schedule)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        abort_unless($user && $user->isAdmin(), 403, 'Apenas administradores podem modificar o quadro de horários.');
+
+        $schedule->delete();
+
+        return back()->with('success', 'Aula removida do quadro de horários.');
+    }
 }

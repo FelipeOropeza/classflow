@@ -13,32 +13,61 @@ import {
   X,
   Trash2,
   Settings2,
-  ArrowRight
+  ArrowRight,
+  BookOpen,
+  Check
 } from 'lucide-vue-next';
 
 const props = defineProps<{
   teachers: any[];
+  subjects: any[];
 }>();
 
 const isModalOpen = ref(false);
+const isEditing = ref(false);
+const editingId = ref<number | null>(null);
 const searchQuery = ref('');
 
 const form = useForm({
   name: '',
   email: '',
   password: '',
+  subject_ids: [] as number[],
 });
 
-const openModal = () => isModalOpen.value = true;
+const openModal = (teacher?: any) => {
+  if (teacher && typeof teacher === 'object' && teacher.id) {
+    isEditing.value = true;
+    editingId.value = teacher.id;
+    form.name = teacher.name;
+    form.email = teacher.email;
+    form.password = '';
+    form.subject_ids = teacher.subjects?.map((s: any) => s.id) || [];
+  } else {
+    isEditing.value = false;
+    editingId.value = null;
+    form.reset();
+  }
+  isModalOpen.value = true;
+};
+
 const closeModal = () => {
   isModalOpen.value = false;
+  isEditing.value = false;
+  editingId.value = null;
   form.reset();
 };
 
 const submit = () => {
-  form.post(route('teachers.store'), {
-    onSuccess: () => closeModal(),
-  });
+  if (isEditing.value && editingId.value) {
+    form.put(route('teachers.update', editingId.value), {
+      onSuccess: () => closeModal(),
+    });
+  } else {
+    form.post(route('teachers.store'), {
+      onSuccess: () => closeModal(),
+    });
+  }
 };
 
 const deleteTeacher = (id: number) => {
@@ -47,7 +76,14 @@ const deleteTeacher = (id: number) => {
   }
 };
 
-const alert = (msg: string) => window.alert(msg);
+const toggleSubject = (id: number) => {
+  const index = form.subject_ids.indexOf(id);
+  if (index === -1) {
+    form.subject_ids.push(id);
+  } else {
+    form.subject_ids.splice(index, 1);
+  }
+};
 </script>
 
 <template>
@@ -100,6 +136,7 @@ const alert = (msg: string) => window.alert(msg);
               <tr class="bg-slate-50/50">
                 <th class="px-8 py-5 text-left text-[11px] font-black uppercase tracking-widest text-slate-400">Docente</th>
                 <th class="px-8 py-5 text-left text-[11px] font-black uppercase tracking-widest text-slate-400">Email</th>
+                <th class="px-8 py-5 text-left text-[11px] font-black uppercase tracking-widest text-slate-400">Especialidades</th>
                 <th class="px-8 py-5 text-left text-[11px] font-black uppercase tracking-widest text-slate-400">Cadastro</th>
                 <th class="px-8 py-5 text-right text-[11px] font-black uppercase tracking-widest text-slate-400">Ações</th>
               </tr>
@@ -121,6 +158,18 @@ const alert = (msg: string) => window.alert(msg);
                   </div>
                 </td>
                 <td class="px-8 py-5">
+                  <div class="flex flex-wrap gap-1.5">
+                    <span 
+                      v-for="subject in teacher.subjects" 
+                      :key="subject.id"
+                      class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-wider"
+                    >
+                      {{ subject.name }}
+                    </span>
+                    <span v-if="!teacher.subjects?.length" class="text-xs font-bold text-slate-300 italic">Nenhuma</span>
+                  </div>
+                </td>
+                <td class="px-8 py-5">
                   <span class="text-sm font-bold text-slate-500">
                     {{ new Date(teacher.created_at).toLocaleDateString('pt-BR') }}
                   </span>
@@ -130,7 +179,7 @@ const alert = (msg: string) => window.alert(msg);
                     <button @click="deleteTeacher(teacher.id)" class="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
                       <Trash2 :size="18" />
                     </button>
-                    <button @click="alert('Módulo de edição de professor em desenvolvimento.')" class="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Editar Docente">
+                    <button @click="openModal(teacher)" class="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Editar Docente">
                       <Settings2 :size="18" />
                     </button>
                   </div>
@@ -163,8 +212,12 @@ const alert = (msg: string) => window.alert(msg);
                   <Plus :size="24" />
                 </div>
                 <div>
-                  <h3 class="text-xl font-black text-slate-900 leading-tight">Novo Professor</h3>
-                  <p class="text-sm font-medium text-slate-500">Cadastre o docente.</p>
+                  <h3 class="text-xl font-black text-slate-900 leading-tight">
+                    {{ isEditing ? 'Editar Professor' : 'Novo Professor' }}
+                  </h3>
+                  <p class="text-sm font-medium text-slate-500">
+                    {{ isEditing ? 'Atualize os dados e disciplinas.' : 'Cadastre o docente e disciplinas.' }}
+                  </p>
                 </div>
               </div>
               <button @click="closeModal" class="p-2 text-slate-400 hover:text-slate-900 transition-colors">
@@ -209,7 +262,7 @@ const alert = (msg: string) => window.alert(msg);
 
               <!-- Password -->
               <div class="group">
-                <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 group-focus-within:text-indigo-600 transition-colors ml-1 mb-1.5">Senha Provisória</label>
+                <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 group-focus-within:text-indigo-600 transition-colors ml-1 mb-1.5">Senha</label>
                 <div class="relative">
                   <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors pointer-events-none">
                     <Lock :size="18" />
@@ -217,10 +270,34 @@ const alert = (msg: string) => window.alert(msg);
                   <input 
                     v-model="form.password"
                     type="password" 
-                    required
-                    placeholder="Mínimo 8 caracteres"
+                    :required="!isEditing"
+                    :placeholder="isEditing ? 'Deixe em branco para manter' : 'Mínimo 8 caracteres'"
                     class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-slate-900 outline-none focus:border-indigo-600/20 focus:bg-white focus:ring-4 focus:ring-indigo-600/5 transition-all"
                   >
+                </div>
+              </div>
+
+              <!-- Specialties Selection -->
+              <div class="space-y-3">
+                <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Disciplinas Habilitadas</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    v-for="subject in subjects"
+                    :key="subject.id"
+                    type="button"
+                    @click="toggleSubject(subject.id)"
+                    class="flex items-center gap-2 p-3 rounded-2xl border-2 transition-all text-left"
+                    :class="form.subject_ids.includes(subject.id) 
+                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm' 
+                      : 'border-slate-50 bg-slate-50 text-slate-500 hover:border-slate-200'"
+                  >
+                    <div class="w-5 h-5 rounded-lg flex items-center justify-center shrink-0" 
+                      :class="form.subject_ids.includes(subject.id) ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200'"
+                    >
+                      <Check v-if="form.subject_ids.includes(subject.id)" :size="12" />
+                    </div>
+                    <span class="text-[10px] font-black uppercase tracking-tight truncate">{{ subject.name }}</span>
+                  </button>
                 </div>
               </div>
 
