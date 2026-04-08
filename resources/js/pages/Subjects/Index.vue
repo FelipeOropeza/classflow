@@ -53,6 +53,8 @@ const deleteSubject = (id: number) => {
     useForm({}).delete(route('subjects.destroy', id));
   }
 };
+
+const alert = (msg: string) => window.alert(msg);
 </script>
 
 <template>
@@ -128,12 +130,12 @@ const deleteSubject = (id: number) => {
           
           <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
             <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">ID: CF-{{ String(subject.id).padStart(3, '0') }}</span>
-            <Link 
-              :href="route('subjects.index')" 
+            <button 
+              @click="alert('A visualização de grade disciplinar será implementada nesta semana.')"
               class="text-xs font-bold text-indigo-600 hover:text-indigo-800"
             >
               Ver Grade
-            </Link>
+            </button>
           </div>
         </div>
       </div>

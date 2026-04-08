@@ -13,6 +13,10 @@ use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\TermController;
 use App\Http\Controllers\SchoolEventController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\TeacherScheduleController;
+use App\Http\Controllers\SchedulePdfController;
+use App\Http\Controllers\GuardianScheduleController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\EnrollmentController;
@@ -48,6 +52,15 @@ Route::middleware(['auth'])->group(function () {
     // Classes
     Route::get('/classes', [SchoolClassController::class, 'index'])->name('classes.index');
     Route::post('/classes', [SchoolClassController::class, 'store'])->name('classes.store');
+    Route::delete('/classes/{class}', [SchoolClassController::class, 'destroy'])->name('classes.destroy');
+    Route::patch('/classes/{class}/toggle-active', [SchoolClassController::class, 'toggleActive'])->name('classes.toggle-active');
+
+    // Schedules (Timetables)
+    Route::get('/classes/{schoolClass}/schedules', [ScheduleController::class, 'index'])->name('classes.schedules.index');
+    Route::post('/classes/{schoolClass}/schedules', [ScheduleController::class, 'store'])->name('classes.schedules.store');
+    Route::post('/classes/{schoolClass}/schedules/generate', [ScheduleController::class, 'generate'])->name('classes.schedules.generate');
+    Route::get('/classes/schedules/all/pdf', [SchedulePdfController::class, 'exportAll'])->name('classes.schedules.pdf-all');
+    Route::get('/classes/{schoolClass}/schedules/pdf', [SchedulePdfController::class, 'export'])->name('classes.schedules.pdf');
     
     // Students
     Route::get('/students', [StudentController::class, 'index'])->name('students.index');
@@ -87,4 +100,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/guardian/attendance', [GuardianController::class, 'attendance'])->name('guardian.attendance');
     Route::get('/guardian/student/create', [GuardianController::class, 'createStudent'])->name('guardian.student.create');
     Route::post('/guardian/student', [GuardianController::class, 'storeStudent'])->name('guardian.student.store');
+    Route::get('/guardian/schedule', [GuardianScheduleController::class, 'index'])->name('guardian.schedule');
+
+    // Teacher Portal
+    Route::get('/meu-horario', [TeacherScheduleController::class, 'index'])->name('teacher.schedule');
 });

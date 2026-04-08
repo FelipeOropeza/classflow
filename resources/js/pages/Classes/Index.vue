@@ -1,23 +1,35 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, Link, usePage, router } from '@inertiajs/vue3';
 import { 
   Users, 
   Plus, 
   Trash2, 
   Edit, 
+  Clock, 
   Eye, 
   Calendar,
   Layers,
-  ArrowRight
+  ArrowRight,
+  FileDown,
+  ShieldCheck,
+  ShieldAlert,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-vue-next';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps<{
   classes: any[];
   activeYear: string;
   academic_year_id: number;
 }>();
+
+const page = usePage();
+const isAdmin = computed(() => {
+    const auth = page.props.auth as any;
+    return ['admin', 'director'].includes(auth?.user?.role);
+});
 
 const showCreateModal = ref(false);
 
@@ -34,6 +46,22 @@ const submit = () => {
     },
   });
 };
+
+const deleteClass = (id: number) => {
+    if (confirm('Tem certeza que deseja excluir esta turma?')) {
+        router.delete(route('classes.destroy', id), {
+            preserveScroll: true
+        });
+    }
+};
+
+const toggleActive = (id: number) => {
+    router.patch(route('classes.toggle-active', id), {}, {
+        preserveScroll: true
+    });
+};
+
+const alert = (msg: string) => window.alert(msg);
 </script>
 
 <template>
@@ -47,13 +75,25 @@ const submit = () => {
           Gerencie as turmas ativas do ano letivo {{ activeYear }}.
         </p>
       </div>
-      <button 
-        @click="showCreateModal = true"
-        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-xl shadow-indigo-200 transition-all active:scale-95 text-sm flex items-center gap-2 w-fit"
-      >
-        <Plus :size="18" />
-        Nova Turma
-      </button>
+      <div class="flex items-center gap-3">
+        <a 
+          v-if="isAdmin"
+          :href="route('classes.schedules.pdf-all')"
+          target="_blank"
+          class="bg-white hover:bg-slate-50 text-slate-700 px-6 py-2.5 rounded-xl font-bold border border-slate-200 shadow-sm transition-all active:scale-95 text-sm flex items-center gap-2"
+        >
+          <FileDown :size="18" />
+          Exportar Todos (PDF)
+        </a>
+        <button 
+          v-if="isAdmin"
+          @click="showCreateModal = true"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-xl shadow-indigo-200 transition-all active:scale-95 text-sm flex items-center gap-2 w-fit"
+        >
+          <Plus :size="18" />
+          Nova Turma
+        </button>
+      </div>
     </div>
 
     <!-- Empty State -->
@@ -83,16 +123,40 @@ const submit = () => {
                 <Layers :size="20" />
             </div>
             <div class="flex gap-2">
-                <button class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
+                <button 
+                  v-if="isAdmin"
+                  @click="toggleActive(cls.id)" 
+                  class="p-2 transition-all rounded-lg"
+                  :class="cls.is_active ? 'text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'"
+                  :title="cls.is_active ? 'Desativar Turma' : 'Ativar Turma'"
+                >
+                    <component :is="cls.is_active ? ToggleRight : ToggleLeft" :size="20" />
+                </button>
+                <Link 
+                    :href="route('classes.schedules.index', cls.id)"
+                    class="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+                    title="Ver Horário"
+                >
+                    <Clock :size="18" />
+                </Link>
+                <button @click="alert('Módulo de edição em desenvolvimento.')" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="Editar Turma">
                     <Edit :size="18" />
                 </button>
-                <button class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
+                <button @click="deleteClass(cls.id)" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Excluir Turma">
                     <Trash2 :size="18" />
                 </button>
             </div>
         </div>
         
-        <h4 class="text-xl font-black text-slate-900 tracking-tight mb-1">{{ cls.name }}</h4>
+        <div class="flex items-center justify-between mb-1">
+            <h4 class="text-xl font-black text-slate-900 tracking-tight">{{ cls.name }}</h4>
+            <span 
+              class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border"
+              :class="cls.is_active ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'"
+            >
+              {{ cls.is_active ? 'Ativa' : 'Inativa' }}
+            </span>
+        </div>
         <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
             <Calendar :size="12" />
             {{ activeYear }}
@@ -103,9 +167,9 @@ const submit = () => {
                 <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Alunos</span>
                 <span class="text-lg font-black text-slate-900">{{ cls.enrollments_count }}</span>
             </div>
-            <button class="bg-slate-900 text-white p-2 rounded-xl hover:bg-indigo-600 transition-colors">
+            <Link :href="route('classes.schedules.index', cls.id)" class="bg-slate-900 text-white p-2 rounded-xl hover:bg-indigo-600 transition-colors">
                 <ArrowRight :size="20" />
-            </button>
+            </Link>
         </div>
       </div>
     </div>

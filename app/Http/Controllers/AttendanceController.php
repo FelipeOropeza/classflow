@@ -21,8 +21,11 @@ class AttendanceController extends Controller
 
         $user = Auth::user();
         
-        // Recupera links de aulas (se professor, apenas os dele)
+        // Recupera links de aulas (se professor, apenas os dele) que as turmas estejam ATIVAS
         $links = ClassSubject::with(['schoolClass', 'subject', 'teacher'])
+            ->whereHas('schoolClass', function($q) {
+                $q->where('is_active', true);
+            })
             ->when($user->role === 'teacher', function($q) use ($user) {
                 $q->where('teacher_id', $user->id);
             })
@@ -78,7 +81,7 @@ class AttendanceController extends Controller
             'diary' => $diary,
             'holiday' => $holiday,
             'isLocked' => $isLocked,
-            'canEdit' => !$isLocked && !$holiday && $date === date('Y-m-d') 
+            'canEdit' => !$isLocked && !$holiday && ($link?->schoolClass?->is_active ?? true) && $date === date('Y-m-d') 
         ]);
     }
 
@@ -110,6 +113,11 @@ class AttendanceController extends Controller
         $holiday = SchoolEvent::where('event_date', $date)->whereIn('type', ['holiday', 'recess'])->exists();
         if ($holiday) {
              return back()->withErrors(['message' => 'Impossível realizar chamada em feriado ou recesso escolar.']);
+        }
+
+        // Regra Admin: Turma deve estar ATIVA
+        if (!$link->schoolClass->is_active) {
+            return back()->withErrors(['message' => 'Esta turma está desativada pelo administrador. Não é possível realizar chamada.']);
         }
 
         // Regra: Não pode mudar se já foi enviado (locked)

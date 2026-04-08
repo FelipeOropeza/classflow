@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // e.g. "9º Ano A"
             $table->foreignId('academic_year_id')->constrained()->cascadeOnDelete();
+            $table->boolean('is_active')->default(false);
             $table->timestamps();
         });
     }

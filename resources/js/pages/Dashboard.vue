@@ -111,7 +111,7 @@ const isGuardian = computed(() => props.role === 'guardian');
                        <History :size="14" class="text-slate-400" />
                        Atividade Recente
                     </h3>
-                    <Link href="#" class="text-xs font-bold text-indigo-600 hover:underline">Ver Jornada</Link>
+                    <span class="text-xs font-bold text-slate-300">Tempo Real</span>
                  </div>
                  
                  <div class="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm shadow-slate-100/50">
@@ -141,9 +141,9 @@ const isGuardian = computed(() => props.role === 'guardian');
                        <CalendarDays :size="14" class="text-slate-400" />
                        Agenda Institucional
                     </h3>
-                    <button class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <Link :href="route('school-events.index')" class="text-slate-400 hover:text-slate-600 transition-colors" title="Ver Eventos">
                        <MoreHorizontal :size="16" />
-                    </button>
+                    </Link>
                  </div>
 
                  <div class="space-y-4">
@@ -221,11 +221,23 @@ const isGuardian = computed(() => props.role === 'guardian');
                     Acesso Rápido
                  </h3>
                  <div class="space-y-2">
-                    <Link v-for="link in myLinks?.slice(0, 4)" :key="link.id" :href="route('attendance.index', {link_id: link.id})" 
+                    <!-- Schedule Action -->
+                    <Link :href="route('teacher.schedule')"
+                      class="flex items-center justify-between p-4 bg-indigo-600 border border-indigo-700 hover:bg-slate-900 rounded-xl transition-all group"
+                    >
+                       <div class="flex items-center gap-3">
+                          <span class="w-2 h-2 rounded-full bg-white"></span>
+                          <span class="text-sm font-bold text-white">Meu Quadro de Horários</span>
+                       </div>
+                       <ChevronRight :size="16" class="text-indigo-200 group-hover:text-white transition-colors" />
+                    </Link>
+
+                    <!-- My classes quick list -->
+                    <Link v-for="link in myLinks?.slice(0, 3)" :key="link.id" :href="route('attendance.index', {link_id: link.id})" 
                       class="flex items-center justify-between p-4 bg-white border border-slate-100 hover:border-slate-200 rounded-xl transition-all group"
                     >
                        <div class="flex items-center gap-3">
-                          <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                          <span class="w-2 h-2 rounded-full bg-slate-200"></span>
                           <span class="text-sm font-bold text-slate-700">{{ link.school_class.name }} <span class="text-slate-300 mx-1">•</span> {{ link.subject.name }}</span>
                        </div>
                        <ChevronRight :size="16" class="text-slate-300 group-hover:text-indigo-600 transition-colors" />

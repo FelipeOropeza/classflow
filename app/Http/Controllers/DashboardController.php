@@ -52,6 +52,9 @@ class DashboardController extends Controller
         elseif ($user->role === 'teacher') {
             $myLinks = ClassSubject::with(['schoolClass', 'subject'])
                 ->where('teacher_id', $user->id)
+                ->whereHas('schoolClass', function($q) {
+                    $q->where('is_active', true);
+                })
                 ->get();
             
             $data['stats'] = [

@@ -12,13 +12,14 @@ import {
   CalendarDays,
   Lock,
   Unlock,
-  AlertTriangle
+  AlertTriangle,
+  ShieldAlert
 } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
 interface Link {
   id: number;
-  school_class: { name: string };
+  school_class: { name: string; is_active: boolean };
   subject: { name: string };
   teacher?: { name: string };
 }
@@ -155,6 +156,17 @@ const submit = () => {
            </div>
         </div>
           </div>
+        </div>
+
+        <!-- Disclaimer Inactive Class -->
+        <div v-if="selectedLink && !selectedLink.school_class.is_active" class="p-6 bg-rose-50 rounded-3xl border border-rose-100 flex items-start gap-4 text-rose-700 animate-in shake duration-500">
+           <ShieldAlert class="shrink-0 mt-0.5" :size="22" />
+           <div>
+              <h4 class="font-bold text-lg leading-tight mb-1">Turma Desativada</h4>
+              <p class="text-sm font-medium leading-relaxed opacity-90">
+                 Esta turma não está autorizada para lançamentos no momento. Entre em contato com a secretaria para ativação.
+              </p>
+           </div>
         </div>
 
         <!-- Disclaimer Data Retroativa/Futura -->

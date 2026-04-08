@@ -116,5 +116,7 @@ class DatabaseSeeder extends Seeder
             ['academic_year_id' => $year->id, 'title' => 'Feriado Nacional'],
             ['event_date' => '2026-04-21', 'type' => 'holiday', 'description' => 'Tiradentes (Recesso)']
         );
+
+        $this->call(ScheduleTestDataSeeder::class);
     }
 }

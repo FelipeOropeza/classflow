@@ -37,4 +37,20 @@ class SchoolClassController extends Controller
         return redirect()->route('classes.index')
             ->with('success', 'Turma criada com sucesso!');
     }
+
+    public function destroy(SchoolClass $class)
+    {
+        $class->delete();
+
+        return redirect()->route('classes.index')
+            ->with('success', 'Turma removida com sucesso!');
+    }
+
+    public function toggleActive(SchoolClass $class)
+    {
+        $class->update(['is_active' => !$class->is_active]);
+
+        return redirect()->route('classes.index')
+            ->with('success', 'Status da turma atualizado com sucesso!');
+    }
 }

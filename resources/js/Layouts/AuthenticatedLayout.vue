@@ -100,6 +100,7 @@ const menuItems: MenuItem[] = [
 
   // Professor
   { name: 'Chamada Diária', icon: ClipboardCheck, route: 'attendance.index', component: 'Attendance/Index', roles: ['teacher'] },
+  { name: 'Meu Horário', icon: Calendar, route: 'teacher.schedule', component: 'Teacher/Schedule', roles: ['teacher'] },
   { name: 'Plano de Avaliação', icon: ClipboardList, route: 'assessments.index', component: 'Assessments/Index', roles: ['teacher'] },
   { name: 'Lançar Notas', icon: BarChart3, route: 'grades.index', component: 'Grades/Index', roles: ['teacher'] },
   

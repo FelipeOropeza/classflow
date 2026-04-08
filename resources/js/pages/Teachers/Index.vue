@@ -46,6 +46,8 @@ const deleteTeacher = (id: number) => {
     form.delete(route('teachers.destroy', id));
   }
 };
+
+const alert = (msg: string) => window.alert(msg);
 </script>
 
 <template>
@@ -128,7 +130,7 @@ const deleteTeacher = (id: number) => {
                     <button @click="deleteTeacher(teacher.id)" class="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
                       <Trash2 :size="18" />
                     </button>
-                    <button class="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
+                    <button @click="alert('Módulo de edição de professor em desenvolvimento.')" class="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Editar Docente">
                       <Settings2 :size="18" />
                     </button>
                   </div>
