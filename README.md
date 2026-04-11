@@ -1,7 +1,5 @@
 # ClassFlow ERP 🎓
 
-![Branding do Projeto](C:\Users\User\.gemini\antigravity\brain\6d1829e4-e15c-4806-a6e9-f4c0fd1afa07\classflow_hero_branding_1775878443531.png)
-
 > **ClassFlow** é um sistema de gestão escolar (ERP) de última geração, desenvolvido para digitalizar e otimizar processos pedagógicos e administrativos em tempo real.
 
 ---
@@ -23,7 +21,6 @@ O projeto utiliza as tecnologias mais modernas do ecossistema PHP e JavaScript (
 - **Frontend:** [Vue 3](https://vuejs.org/) (Composition API) + [Inertia.js](https://inertiajs.com/)
 - **Estilização:** [Tailwind CSS v4](https://tailwindcss.com/) (Design modernista e performático)
 - **Banco de Dados:** MySQL com otimização de índices.
-- **Inteligência Artificial:** Integração via [Ollama](https://ollama.ai/) para assistente administrativo (SQL Analytics).
 - **Interface:** Lucide Icons & Componentes customizados (estilo Shadcn).
 
 ---
@@ -51,9 +48,8 @@ O projeto utiliza as tecnologias mais modernas do ecossistema PHP e JavaScript (
 Para este projeto, apliquei padrões de engenharia de software que garantem escalabilidade:
 
 1.  **RBAC (Role-Based Access Control):** Implementação de níveis de acesso rigorosos para garantir a privacidade dos dados.
-2.  **AI Integration:** Um assistente capaz de traduzir perguntas em linguagem natural para consultas complexas no banco de dados (Text-to-SQL).
-3.  **UI/UX Premium:** Foco em micro-interações e transições suaves (< 300ms) para alta produtividade.
-4.  **Database Design:** Relacionamentos polimórficos e tabelas pivô otimizadas para performance.
+2.  **UI/UX Premium:** Foco em micro-interações e transições suaves (< 300ms) para alta produtividade.
+3.  **Database Design:** Relacionamentos polimórficos e tabelas pivô otimizadas para performance.
 
 ---
 
